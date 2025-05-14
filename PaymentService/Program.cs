@@ -1,7 +1,7 @@
 using PaymentService;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+builder.Services.AddHostedService<PaymentWorker>();
 
 var host = builder.Build();
 host.Run();
