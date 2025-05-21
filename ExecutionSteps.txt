@@ -1,0 +1,61 @@
+
+# Create Kafka Topics:
+============================
+docker exec kafka_local kafka-topics --create \
+  --topic orders-topic \
+  --bootstrap-server localhost:9092 \
+  --partitions 3 \
+  --replication-factor 1
+
+
+
+docker exec kafka_local kafka-topics --create \
+  --topic low-stock-topic \
+  --bootstrap-server localhost:9092 \
+  --partitions 3 \
+  --replication-factor 1
+
+
+# List all kafka Topics
+==========================
+docker exec kafka_local kafka-topics --list --bootstrap-server localhost:9092
+
+# Delete Kafka Topics
+=============================
+docker exec kafka_local kafka-topics \
+  --delete \
+  --bootstrap-server localhost:9092 \
+  --topic <topic Name>
+
+
+Notes:
+=> Recommended uses 3 partitions for parallelism, regional routing, and scalability.
+=> kafka_local is name of Kafka which is running as docker container.
+
+
+SYSTEM COMPONENTS & FLOW OVERVIEW
+====================================
+
+[Client]
+   │
+   ▼
+[OrderPlaceService (API)]
+   │
+   ▼
+Kafka → [orders-topic (partitioned by region)]
+   │
+ ┌▼────────────┐    ┌─────────────┐    ┌──────────────────────┐
+ │PaymentService│    │InventoryService│    │AnalyticsService (Timer Job)│
+ └────────────┘    └─────────────┘    └──────────────────────┘
+   │                             │                         │
+   ▼                             ▼                         ▼
+SQL Server                SQL Server            Kafka → [low-stock-topic]
+                                                        │
+                                                        ▼
+                                             [OrderReplenishService]
+                                                        ▼
+                                                  Kafka → [orders-topic]
+
+
+
+Confusion on consumer groups, Partition (Kafka)

@@ -1,7 +1,15 @@
+﻿using ECommerce.Shared.Interface;
+using ECommerce.Shared;
 using ReplenishService;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<OrderReplenishWorker>();
+var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((context, services) =>
+    {
+        services.AddSingleton<IKafkaConsumer>(new KafkaConsumer("replenish-group"));
+        services.AddSingleton<IKafkaProducer, KafkaProducer>(); 
 
-var host = builder.Build();
-host.Run();
+        services.AddHostedService<OrderReplenishWorker>();
+    })
+    .Build();
+
+await host.RunAsync();

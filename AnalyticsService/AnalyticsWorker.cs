@@ -5,13 +5,13 @@ namespace AnalyticsService
     public class AnalyticsWorker : BackgroundService
     {
         private readonly ILogger<AnalyticsWorker> _logger;
-        private readonly IInventoryRepository _inventoryRepo;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IKafkaProducer _producer;
 
-        public AnalyticsWorker(ILogger<AnalyticsWorker> logger, IInventoryRepository inventoryRepo, IKafkaProducer producer)
+        public AnalyticsWorker(ILogger<AnalyticsWorker> logger, IServiceProvider serviceProvider, IKafkaProducer producer)
         {
             _logger = logger;
-            _inventoryRepo = inventoryRepo;
+            _serviceProvider = serviceProvider;
             _producer = producer;
         }
 
@@ -19,7 +19,10 @@ namespace AnalyticsService
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                var lowStockProducts = await _inventoryRepo.GetLowStockProductsAsync();
+                using var scope = _serviceProvider.CreateScope();
+                var inventoryRepo = scope.ServiceProvider.GetRequiredService<IInventoryRepository>();
+
+                var lowStockProducts = await inventoryRepo.GetLowStockProductsAsync();
 
                 if (_logger.IsEnabled(LogLevel.Information))
                 {

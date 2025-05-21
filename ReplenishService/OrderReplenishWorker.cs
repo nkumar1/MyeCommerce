@@ -7,13 +7,14 @@ namespace ReplenishService
     public class OrderReplenishWorker : BackgroundService
     {
         private readonly ILogger<OrderReplenishWorker> _logger;
-        private readonly IKafkaConsumer _consumer = new KafkaConsumer("replenish-group");
+        private readonly IKafkaConsumer _consumer;
         private readonly IKafkaProducer _producer;
 
 
-        public OrderReplenishWorker(ILogger<OrderReplenishWorker> logger, IKafkaProducer producer)
+        public OrderReplenishWorker(ILogger<OrderReplenishWorker> logger, IKafkaConsumer consumer, IKafkaProducer producer)
         {
             _logger = logger;
+            _consumer = consumer;
             _producer = producer;
         }
 
