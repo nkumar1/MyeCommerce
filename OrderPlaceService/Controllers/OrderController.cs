@@ -19,6 +19,8 @@ namespace OrderPlaceService.API.Controllers
         [HttpPost]
         public async Task<IActionResult> PlaceOrder([FromBody] Order order)
         {
+            order.Id = order.Id == Guid.Empty ? Guid.NewGuid() : order.Id;
+
             await _producer.ProduceAsync("orders-topic", order, order.Region);
             return Ok("Order placed successfully");
         }

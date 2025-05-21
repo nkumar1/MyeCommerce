@@ -22,6 +22,11 @@ CREATE TABLE OrderItems (
     CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductId) REFERENCES Products(Id)
 );
 
+CREATE TABLE ProcessedOrders (
+    OrderId UNIQUEIDENTIFIER PRIMARY KEY,
+    ProcessedAt DATETIME NOT NULL DEFAULT GETDATE()
+);
+
 
 -- Insert Products
 INSERT INTO Products (Id, Name, StockCount, Region)

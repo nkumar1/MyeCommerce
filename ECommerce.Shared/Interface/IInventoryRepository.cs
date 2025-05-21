@@ -9,7 +9,7 @@ namespace ECommerce.Shared.Interface
 {
     public interface IInventoryRepository
     {
-        Task DecrementStockAsync(Guid productId, int quantity);
+        Task DecrementStockAsync(Guid productId, List<OrderItem> items);
         Task<List<Product>> GetLowStockProductsAsync(int threshold = 10);
     }
 }

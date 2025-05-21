@@ -20,24 +20,25 @@ namespace InventoryService
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+
+            using var scope = _serviceProvider.CreateScope();
+            var inventoryRepo = scope.ServiceProvider.GetRequiredService<IInventoryRepository>();
+
+            await _consumer.ConsumeAsync<Order>("orders-topic", async (order) =>
             {
-                if (_logger.IsEnabled(LogLevel.Information))
+                try
                 {
-                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                    _logger.LogInformation("Received order {OrderId} from region {Region}", order.Id, order.Region);
+                    await inventoryRepo.DecrementStockAsync(order.Id, order.Items);
+                    _logger.LogInformation("Stock decremented for order {OrderId}", order.Id);
                 }
-
-                using var scope = _serviceProvider.CreateScope();
-                var inventoryRepo = scope.ServiceProvider.GetRequiredService<IInventoryRepository>();
-
-                await _consumer.ConsumeAsync<Order>("orders-topic", async (order) =>
+                catch (Exception ex)
                 {
-                    foreach (var item in order.Items)
-                    {
-                        await inventoryRepo.DecrementStockAsync(item.ProductId, item.Quantity);
-                    }
-                }, stoppingToken);
-            }
+                    _logger.LogError(ex, "Error processing order {OrderId}", order.Id);
+                    // Optional: implement retry or dead-letter logic
+                }
+            }, stoppingToken);
         }
     }
 }
